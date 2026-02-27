@@ -1,59 +1,60 @@
-import { Tabs } from "expo-router";
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import Octicons from '@expo/vector-icons/Octicons';
-
+import { Tabs } from 'expo-router';
+import { Ionicons, FontAwesome5, Feather } from '@expo/vector-icons';
 
 export default function TabLayout() {
   return (
-    <Tabs 
-        screenOptions={{
-        tabBarActiveTintColor: '#007AFF',      
-        tabBarInactiveTintColor: '#888', 
-        tabBarShowLabel: false,     
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: '#00B8FF',
+        tabBarInactiveTintColor: '#888',
         tabBarStyle: {
-          backgroundColor: '#fff',             
+          backgroundColor: '#fff',
           borderTopWidth: 1,
           borderTopColor: '#eee',
-          height: 60,
-          paddingBottom: 5,
+          height: 65,
+          paddingBottom: 8,
+          paddingTop: 8,
         },
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',
         },
-        headerShown: false,                    
+        headerShown: false,
       }}
     >
-      <Tabs.Screen name="home"
-          options={{
-          title: 'Home',
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="home" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen name="explore"
-          options={{
-          title: 'Explore',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="explore" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen name="messages"
-          options={{
-          title: 'Messages',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="wechat" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen name="profile"
+      <Tabs.Screen
+        name="chats"
         options={{
-          title: 'Progile',
+          title: 'Chats',
           tabBarIcon: ({ color, size }) => (
-            <Octicons name="person-fill" size={size} color={color} />
+            <Ionicons name="chatbubbles" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="groups"
+        options={{
+          title: 'Groups',
+          tabBarIcon: ({ color, size }) => (
+            <FontAwesome5 name="users" size={size - 2} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-circle-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="more"
+        options={{
+          title: 'More',
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="menu" size={size} color={color} />
           ),
         }}
       />

@@ -1,164 +1,286 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
-import { router } from "expo-router";
-import { useState } from "react";
-import ImageLogo from "./Components/imageLogo";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  StyleSheet 
+} from 'react-native';
+import { useState, useEffect, useRef } from 'react';
+import { Feather } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function OTPVerification() {
-    const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [otp, setOtp] = useState(['', '', '', '']);
+  const [timer, setTimer] = useState(45);
+  const [isError, setIsError] = useState(false);
+  const [canResend, setCanResend] = useState(false);
+  const inputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
 
-    const handleOtpChange = (value, index) => {
-        const newOtp = [...otp];
-        newOtp[index] = value;
-        setOtp(newOtp);
-    };
+  // Timer countdown
+  useEffect(() => {
+    if (timer > 0) {
+      const interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(interval);
+    } else {
+      setCanResend(true);
+    }
+  }, [timer]);
 
-    return (
-        <SafeAreaView style={styles.container}>
+  const handleOtpChange = (value, index) => {
+    // Only allow numbers
+    if (value && !/^\d+$/.test(value)) return;
 
-            <View style={styles.imageContainer}><ImageLogo/></View>
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+    setIsError(false);
 
-            {/* Header */}
-            <View style={styles.headerContainer}>
-                <Text style={styles.headerTitle}>Verify OTP</Text>
-                <View style={styles.activeUnderline} />
-            </View>
+    // Auto focus next input
+    if (value && index < 3) {
+      inputRefs[index + 1].current?.focus();
+    }
+  };
 
-            {/* Subtitle */}
-            <Text style={styles.subtitle}>
-                Enter the 6-digit code sent to your email/phone
+  const handleKeyPress = (e, index) => {
+    // Handle backspace
+    if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
+      inputRefs[index - 1].current?.focus();
+    }
+  };
+
+  const handleResend = () => {
+    if (canResend) {
+      setTimer(45);
+      setCanResend(false);
+      setOtp(['', '', '', '']);
+      setIsError(false);
+      // Here you would trigger resend OTP API
+    }
+  };
+
+  const handleSubmit = () => {
+    const code = otp.join('');
+    if (code.length === 4) {
+      // Simulate validation
+      if (code === '1234') {
+        // Correct code
+        router.push('/setPin');
+      } else {
+        // Wrong code
+        setIsError(true);
+      }
+    }
+  };
+
+  const isComplete = otp.every(digit => digit !== '');
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')} : ${secs.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Login</Text>
+        <TouchableOpacity style={styles.registerButton}>
+          <Text style={styles.registerButtonText}>Register</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.content}>
+        <Text style={styles.title}>Enter OTP Code</Text>
+        <Text style={styles.subtitle}>Sent to : (+44) 20 1234 5629</Text>
+
+        {/* Timer and Resend */}
+        <View style={styles.timerContainer}>
+          <Feather name="clock" size={16} color="#666" />
+          <Text style={styles.timerText}>{formatTime(timer)}</Text>
+          <TouchableOpacity 
+            onPress={handleResend}
+            disabled={!canResend}
+          >
+            <Text style={[styles.resendText, canResend && styles.resendActive]}>
+              Resend Code
             </Text>
+          </TouchableOpacity>
+        </View>
 
-            {/* OTP Input Boxes */}
-            <View style={styles.otpContainer}>
-                {otp.map((digit, index) => (
-                    <TextInput
-                        key={index}
-                        style={styles.otpBox}
-                        value={digit}
-                        onChangeText={(value) => handleOtpChange(value, index)}
-                        keyboardType="numeric"
-                        maxLength={1}
-                    />
-                ))}
+        {/* OTP Input Boxes */}
+        <View style={styles.otpContainer}>
+          {otp.map((digit, index) => (
+            <View key={index} style={styles.otpWrapper}>
+              <TextInput
+                ref={inputRefs[index]}
+                style={[
+                  styles.otpInput,
+                  digit && styles.otpInputFilled,
+                  isError && styles.otpInputError,
+                ]}
+                value={digit}
+                onChangeText={(value) => handleOtpChange(value, index)}
+                onKeyPress={(e) => handleKeyPress(e, index)}
+                keyboardType="number-pad"
+                maxLength={1}
+                selectTextOnFocus
+              />
+              <View style={[
+                styles.otpUnderline,
+                digit && styles.otpUnderlineFilled,
+                isError && styles.otpUnderlineError,
+              ]} />
             </View>
+          ))}
+        </View>
 
-            {/* Verify Button */}
-            <TouchableOpacity style={styles.verifyButton} onPress={() => router.push("/newPassword")}>
-                <Text style={styles.verifyButtonText}>Verify</Text>
-            </TouchableOpacity>
+        {/* Error Message */}
+        {isError && (
+          <Text style={styles.errorText}>Code Invalid</Text>
+        )}
 
-            {/* Resend Code */}
-            <View style={styles.resendContainer}>
-                <Text style={styles.resendText}>Didn't receive code? </Text>
-                <TouchableOpacity>
-                    <Text style={styles.resendLink}>Resend</Text>
-                </TouchableOpacity>
-            </View>
-
-        </SafeAreaView>
-    );
+        {/* Submit Button */}
+        <TouchableOpacity 
+          style={[styles.submitButton, isComplete && styles.submitButtonActive]}
+          disabled={!isComplete}
+          onPress={handleSubmit}
+        >
+          <Feather name="arrow-right" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#f0f6ff",
-        paddingHorizontal: 24,
-        paddingTop: 60,
-    },
-    imageContainer:{
-        justifyContent: "center",
-        marginBottom:60
-    },    
-    logoPlaceholder: {
-        alignItems: "center",
-        marginBottom: 30,
-    },
-    logoText: {
-        fontSize: 26,
-        fontWeight: "800",
-        color: "#007AFF",
-        letterSpacing: 2,
-    },
-
-    // Header
-    headerContainer: {
-        marginBottom: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: "#e0e0e0",
-        paddingBottom: 10,
-    },
-    headerTitle: {
-        fontSize: 16,
-        color: "#000",
-        fontWeight: "700",
-        marginBottom: 10,
-    },
-    activeUnderline: {
-        height: 2,
-        backgroundColor: "#007AFF",
-        borderRadius: 2,
-        position: "absolute",
-        bottom: -1,
-        left: 0,
-        width: 80,
-    },
-
-    // Subtitle
-    subtitle: {
-        fontSize: 14,
-        color: "#888",
-        marginBottom: 32,
-        lineHeight: 21,
-    },
-
-    // OTP Inputs
-    otpContainer: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        marginBottom: 32,
-    },
-    otpBox: {
-        width: 48,
-        height: 56,
-        borderWidth: 1,
-        borderColor: "#ddd",
-        borderRadius: 10,
-        textAlign: "center",
-        fontSize: 20,
-        fontWeight: "700",
-        color: "#000",
-        backgroundColor: "#fff",
-    },
-
-    // Verify Button
-    verifyButton: {
-        backgroundColor: "#007AFF",
-        paddingVertical: 16,
-        borderRadius: 30,
-        alignItems: "center",
-        marginBottom: 28,
-    },
-    verifyButtonText: {
-        color: "#fff",
-        fontSize: 17,
-        fontWeight: "700",
-    },
-
-    // Resend
-    resendContainer: {
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    resendText: {
-        color: "#888",
-        fontSize: 14,
-    },
-    resendLink: {
-        color: "#007AFF",
-        fontWeight: "700",
-        fontSize: 14,
-    },
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  header: {
+    backgroundColor: '#00B8FF',
+    paddingTop: 50,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    color: '#fff',
+    fontSize: 32,
+    fontWeight: '700',
+  },
+  registerButton: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 25,
+  },
+  registerButtonText: {
+    color: '#00B8FF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 40,
+    backgroundColor: '#f5f5f5',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 8,
+    position: 'absolute',
+    top: -80,
+    left: 20,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#fff',
+    position: 'absolute',
+    top: -45,
+    left: 20,
+  },
+  timerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 30,
+    marginBottom: 40,
+  },
+  timerText: {
+    fontSize: 16,
+    color: '#666',
+  },
+  resendText: {
+    fontSize: 16,
+    color: '#ccc',
+    marginLeft: 15,
+  },
+  resendActive: {
+    color: '#00B8FF',
+    fontWeight: '600',
+  },
+  otpContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    paddingHorizontal: 10,
+  },
+  otpWrapper: {
+    alignItems: 'center',
+  },
+  otpInput: {
+    width: 60,
+    height: 70,
+    fontSize: 36,
+    fontWeight: '700',
+    color: '#333',
+    textAlign: 'center',
+    backgroundColor: 'transparent',
+  },
+  otpInputFilled: {
+    color: '#000',
+  },
+  otpInputError: {
+    color: '#FF4444',
+  },
+  otpUnderline: {
+    width: 60,
+    height: 3,
+    backgroundColor: '#333',
+    marginTop: 5,
+  },
+  otpUnderlineFilled: {
+    backgroundColor: '#00B8FF',
+  },
+  otpUnderlineError: {
+    backgroundColor: '#FF4444',
+  },
+  errorText: {
+    color: '#FF4444',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 10,
+  },
+  submitButton: {
+    position: 'absolute',
+    right: 20,
+    bottom: 40,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#B0E0FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  submitButtonActive: {
+    backgroundColor: '#00B8FF',
+  },
 });

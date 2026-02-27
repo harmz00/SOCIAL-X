@@ -30,7 +30,7 @@ export default function OnboardingScreen() {
                     subtitle: 
                         <View>
                             <Text style={{textAlign: "center", paddingHorizontal:20}}>Level up your social game: post without limits, vibe with who gets you, and watch your world get way more lit along the way</Text>
-                            <AuthButton text="Sign in" style={{marginTop: 50}} onPress={() => router.push("/signin")}/>
+                            <AuthButton text="Sign in" style={{marginTop: 50}} onPress={() => router.push("/login")}/>
                             <AuthButton text="Join Now" style={{backgroundColor: "#ffffff"}} textStyle={{color: "#000000"}} onPress={() => router.push("/signup")}/>
                         </View>,
                 }  

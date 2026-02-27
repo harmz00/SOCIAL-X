@@ -1,15 +1,15 @@
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function Profile() {
+export default function More() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerText}>Profile</Text>
+        <Text style={styles.headerText}>More</Text>
       </View>
       <View style={styles.content}>
-        <Text style={styles.text}>Profile Screen</Text>
-        <Text style={styles.subtext}>Coming soon...</Text>
+        <Text style={styles.text}>More Screen</Text>
+        <Text style={styles.subtext}>Settings and options coming soon...</Text>
       </View>
     </SafeAreaView>
   );
