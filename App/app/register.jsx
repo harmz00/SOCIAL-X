@@ -6,14 +6,12 @@ import {
   StyleSheet,
   Modal
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-
-
-export default function PhoneLogin() {
+export default function RegisterPhone() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showCountryPicker, setShowCountryPicker] = useState(false);
@@ -35,15 +33,9 @@ export default function PhoneLogin() {
     { flag: '🇰🇪', code: '+254', name: 'Kenya', maxLength: 10, format: [3, 3, 4], placeholder: '712 123 456' },
   ];
 
-  // Format phone number with spaces
   const formatPhoneNumber = (text) => {
-    // Safety check
     if (!text || !selectedCountry || !selectedCountry.format) return '';
-    
-    // Remove all non-numeric characters
     const cleaned = text.replace(/\D/g, '');
-    
-    // Apply formatting based on country format
     const { format } = selectedCountry;
     let formatted = '';
     let position = 0;
@@ -58,24 +50,17 @@ export default function PhoneLogin() {
           formatted += ' ';
         }
       }
-      
       position += segmentLength;
     }
-    
     return formatted;
   };
 
   const handlePhoneChange = (text) => {
-    // Safety check
     if (!text) {
       setPhoneNumber('');
       return;
     }
-    
-    // Get only numbers
     const cleaned = text.replace(/\D/g, '');
-    
-    // Limit to country's max length
     if (cleaned.length <= selectedCountry.maxLength) {
       setPhoneNumber(cleaned);
     }
@@ -89,11 +74,13 @@ export default function PhoneLogin() {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <Text style={styles.headerTitle}>Login</Text>
-          <TouchableOpacity style={styles.registerButton} onPress={() => router.push("/register")}>
-            <Text style={styles.registerButtonText}>Register</Text>
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                <Feather name="arrow-left" size={20} color="#00B8FF" />
+                <Text style={styles.backButtonText}>Login</Text>
+            </TouchableOpacity>        
+            <Text style={styles.headerTitle}>Register</Text>
+        </View>       
+        
         <Text style={styles.headerSubtitle}>Enter your{'\n'}mobile phone</Text>
       </View>
 
@@ -137,7 +124,7 @@ export default function PhoneLogin() {
         <TouchableOpacity 
           style={[styles.submitButton, isValid && styles.submitButtonActive]}
           disabled={!isValid}
-          onPress={() => router.push('/loginOtp')}
+          onPress={() => router.push('/registerOtp')}
         >
           <Feather name="arrow-right" size={24} color="#fff" />
         </TouchableOpacity>
@@ -192,37 +179,42 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#00B8FF',
-    paddingTop: 50,
+    paddingTop: 40,
     paddingBottom: 30,
     paddingHorizontal: 20,
   },
   headerTop: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingBottom: 30
+  },
+  backButton: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 25,
     marginBottom: 25,
+    gap: 5,
+  },
+  backButtonText: {
+    color: '#00B8FF',
+    fontSize: 16,
+    fontWeight: '700',
   },
   headerTitle: {
     color: '#fff',
     fontSize: 32,
     fontWeight: '700',
-  },
-  registerButton: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 25,
-  },
-  registerButtonText: {
-    color: '#00B8FF',
-    fontSize: 16,
-    fontWeight: '700',
+    marginBottom: 20,
   },
   headerSubtitle: {
     color: '#fff',
     fontSize: 28,
     fontWeight: '700',
-    lineHeight: 36,
+    textAlign: 'right',
   },
   content: {
     flex: 1,

@@ -5,12 +5,16 @@ import {
   TouchableOpacity, 
   StyleSheet 
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect, useRef } from 'react';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function OTPVerification() {
+export default function OTPVerification({ 
+  phoneNumber = "(+44) 20 1234 5629",
+  backButtonText = "Login",
+  onSuccess
+}) {
   const [otp, setOtp] = useState(['', '', '', '']);
   const [timer, setTimer] = useState(45);
   const [isError, setIsError] = useState(false);
@@ -30,7 +34,6 @@ export default function OTPVerification() {
   }, [timer]);
 
   const handleOtpChange = (value, index) => {
-    // Only allow numbers
     if (value && !/^\d+$/.test(value)) return;
 
     const newOtp = [...otp];
@@ -38,14 +41,12 @@ export default function OTPVerification() {
     setOtp(newOtp);
     setIsError(false);
 
-    // Auto focus next input
     if (value && index < 3) {
       inputRefs[index + 1].current?.focus();
     }
   };
 
   const handleKeyPress = (e, index) => {
-    // Handle backspace
     if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
       inputRefs[index - 1].current?.focus();
     }
@@ -57,21 +58,28 @@ export default function OTPVerification() {
       setCanResend(false);
       setOtp(['', '', '', '']);
       setIsError(false);
-      // Here you would trigger resend OTP API
+      inputRefs[0].current?.focus();
     }
   };
 
   const handleSubmit = () => {
+    console.log('handleSubmit called!');
     const code = otp.join('');
+    console.log('OTP code:', code);
+    console.log('Code length:', code.length);
+    console.log('isComplete:', isComplete);
+    console.log('onSuccess exists?', !!onSuccess);
+    
     if (code.length === 4) {
-      // Simulate validation
-      if (code === '1234') {
-        // Correct code
-        router.push('/setPin');
+      console.log('Code is 4 digits, calling onSuccess...');
+      if (onSuccess) {
+        console.log('Calling onSuccess now!');
+        onSuccess();
       } else {
-        // Wrong code
-        setIsError(true);
+        console.log('ERROR: onSuccess is not defined!');
       }
+    } else {
+      console.log('ERROR: Code is not 4 digits');
     }
   };
 
@@ -86,16 +94,23 @@ export default function OTPVerification() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Login</Text>
-        <TouchableOpacity style={styles.registerButton}>
-          <Text style={styles.registerButtonText}>Register</Text>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Feather name="arrow-left" size={20} color="#00B8FF" />
+          <Text style={styles.backButtonText}>{backButtonText}</Text>
         </TouchableOpacity>
+        
+        <Text style={styles.headerTitle}>Register</Text>
+        
+        <View style={styles.headerBottom}>
+          <Text style={styles.headerSubtitle}>Enter OTP Code</Text>
+          <Text style={styles.phoneNumber}>Sent to : {phoneNumber}</Text>
+        </View>
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.title}>Enter OTP Code</Text>
-        <Text style={styles.subtitle}>Sent to : (+44) 20 1234 5629</Text>
-
         {/* Timer and Resend */}
         <View style={styles.timerContainer}>
           <Feather name="clock" size={16} color="#666" />
@@ -119,7 +134,6 @@ export default function OTPVerification() {
                 style={[
                   styles.otpInput,
                   digit && styles.otpInputFilled,
-                  isError && styles.otpInputError,
                 ]}
                 value={digit}
                 onChangeText={(value) => handleOtpChange(value, index)}
@@ -131,22 +145,19 @@ export default function OTPVerification() {
               <View style={[
                 styles.otpUnderline,
                 digit && styles.otpUnderlineFilled,
-                isError && styles.otpUnderlineError,
               ]} />
             </View>
           ))}
         </View>
 
-        {/* Error Message */}
-        {isError && (
-          <Text style={styles.errorText}>Code Invalid</Text>
-        )}
-
         {/* Submit Button */}
         <TouchableOpacity 
           style={[styles.submitButton, isComplete && styles.submitButtonActive]}
           disabled={!isComplete}
-          onPress={handleSubmit}
+          onPress={() => {
+            console.log('Button pressed! isComplete:', isComplete);
+            handleSubmit();
+          }}
         >
           <Feather name="arrow-right" size={24} color="#fff" />
         </TouchableOpacity>
@@ -162,28 +173,45 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#00B8FF',
-    paddingTop: 50,
+    paddingTop: 10,
     paddingBottom: 20,
     paddingHorizontal: 20,
+  },
+  backButton: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 25,
+    alignSelf: 'flex-start',
+    marginBottom: 25,
+    gap: 5,
+  },
+  backButtonText: {
+    color: '#00B8FF',
+    fontSize: 16,
+    fontWeight: '700',
   },
   headerTitle: {
     color: '#fff',
     fontSize: 32,
     fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 30,
   },
-  registerButton: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 25,
+  headerBottom: {
+    alignItems: 'center',
   },
-  registerButtonText: {
-    color: '#00B8FF',
-    fontSize: 16,
+  headerSubtitle: {
+    color: '#fff',
+    fontSize: 28,
     fontWeight: '700',
+    marginBottom: 8,
+  },
+  phoneNumber: {
+    color: '#fff',
+    fontSize: 16,
   },
   content: {
     flex: 1,
@@ -191,27 +219,10 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     backgroundColor: '#f5f5f5',
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#fff',
-    marginBottom: 8,
-    position: 'absolute',
-    top: -80,
-    left: 20,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#fff',
-    position: 'absolute',
-    top: -45,
-    left: 20,
-  },
   timerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginTop: 30,
     marginBottom: 40,
   },
   timerText: {
